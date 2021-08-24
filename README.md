@@ -5,12 +5,12 @@ Roxxy is a distributed HTTP/websockets reverse proxy backed by Redis inspired by
 
 ## Features (TODO)
 
-[] Load-Balancing
+- [ ] Load-Balancing
 
-[] Dead Backend Detection
+- [ ] Dead Backend Detection
 
-[] Dynamic Configuration
+- [ ] Dynamic Configuration
 
-[] WebSocket
+- [ ] WebSocket
 
-[] TLS
+- [ ] TLS

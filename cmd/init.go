@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/aaqaishtyaq/roxxy/reverseproxy"
 	"github.com/google/gops/agent"
 	"github.com/urfave/cli/v2"
 )
@@ -13,6 +14,9 @@ func runServer(c *cli.Context) error {
 	if err != nil {
 		log.Printf("Unable to start gops agent: %v", err)
 	}
+
+	var rp reverseproxy.ReverseProxy
+	rp = &reverseproxy.NativeReverseProxy{}
 
 	return nil
 }

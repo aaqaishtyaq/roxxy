@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"net"
 	"time"
+
+	"github.com/aaqaishtyaq/roxxy/log"
 )
 
 type Router interface {
@@ -27,6 +29,19 @@ type RequestData struct {
 	StartTime  time.Time
 	AllDead    bool
 }
+
+func (r *RequestData) logError(path string, rid string, err error) {
+	log.ErrorLogger.MessageRaw(&log.LogEntry{
+		Err: &log.ErrEntry{
+			Backend: r.Backend,
+			Host:    r.Host,
+			Path:    path,
+			Rid:     rid,
+			Err:     err.Error(),
+		},
+	})
+}
+
 
 type ReverseProxyConfig struct {
 	Router            Router

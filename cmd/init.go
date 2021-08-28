@@ -18,6 +18,8 @@ func runServer(c *cli.Context) error {
 	var rp reverseproxy.ReverseProxy
 	rp = &reverseproxy.NativeReverseProxy{}
 
+	// create redis backend & connect to it
+
 	return nil
 }
 

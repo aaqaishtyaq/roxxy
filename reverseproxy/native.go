@@ -3,9 +3,13 @@ package reverseproxy
 import (
 	"context"
 	"crypto/tls"
+	"errors"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,6 +26,8 @@ var (
 		Name:      "connections_current_open",
 		Help:      "The current number of open connections excluding hijacked ones.",
 	})
+
+	okResponse = []byte("ok\n")
 )
 
 type NativeReverseProxy struct {
@@ -122,7 +128,67 @@ func (rp *NativeReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Reques
 		headerSet(req.Header, rp.RequestIDHeader, unparsedID.String())
 	}
 
-	upgrade
+	upgrade := headerGet(req.Header, "Upgrade")
+	if upgrade != "" && strings.ToLower(upgrade) == "websocker" {
+		reqData, err := rp.serveWebsocket(rw, req)
+		if err != nil {
+			// reqData.logError(req.URL.Path, rp.rid)
+		}
+	}
+}
+
+func (rp *NativeReverseProxy) ridString(req *http.Request) string {
+	return rp.RequestIDHeader + ":" + headerGet(req.Header, rp.RequestIDHeader)
+}
+
+func (rp *NativeReverseProxy) serveWebsocket(rw http.ResponseWriter, req *http.Request) (*RequestData, error) {
+	reqData, err := rp.Router.ChooseBackend(req.Host)
+	if err != nil {
+		return reqData, err
+	}
+	url, err := url.Parse(reqData.Backend)
+	if err != nil {
+		return reqData, err
+	}
+
+	req.Host = url.Host
+	destConn, err := rp.dialer.Dial("tcp", url.Host)
+	if err != nil {
+		return reqData, err
+	}
+	defer destConn.Close()
+
+	hijk, ok := rw.(http.Hijacker)
+	if !ok {
+		return reqData, errors.New("Not a Hijacker")
+	}
+
+	conn, _, err := hijk.Hijack()
+	if err != nil {
+		return reqData, err
+	}
+	defer conn.Close()
+
+	var clientIP string
+	if clientIP, _, err = net.SplitHostPort(req.RemoteAddr); err == nil {
+		if prior, ok := req.Header["X-Forwarded-For"]; ok {
+			clientIP = strings.Join(prior, ", ") + ", " + clientIP
+		}
+		headerSet(req.Header, "X-Forwarded-For", clientIP)
+	}
+	err = req.Write(destConn)
+	if err != nil {
+		return reqData, err
+	}
+	errc := make(chan error, 2)
+	cp := func(dest io.Writer, src io.Reader) {
+		_, err := io.Copy(dest, src)
+		errc <- err
+	}
+	go cp(destConn, conn)
+	go cp(conn, destConn)
+	<-errc
+	return reqData, nil
 }
 
 func headerGet(header http.Header, key string) string {

@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/aaqaishtyaq/roxxy/backend"
 	"github.com/aaqaishtyaq/roxxy/reverseproxy"
 	"github.com/google/gops/agent"
 	"github.com/urfave/cli/v2"
@@ -18,7 +19,40 @@ func runServer(c *cli.Context) error {
 	var rp reverseproxy.ReverseProxy
 	rp = &reverseproxy.NativeReverseProxy{}
 
-	// create redis backend & connect to it
+	readOpts := backend.RedisOptions{
+		Network: c.String("read-redis-network"),
+		Host: c.String("read-redis-host"),
+		Port: c.Int("read-redis-port"),
+		SentinelAddrs: c.String("read-redis-sentinel-addrs"),
+		SentinelName: c.String("read-redis-sentinel-name"),
+		Password: c.String("read-redis-password"),
+		DB: c.Int("read-redis-db"),
+	}
+
+	writeOpts := backend.RedisOptions{
+		Network:       c.String("write-redis-network"),
+		Host:          c.String("write-redis-host"),
+		Port:          c.Int("write-redis-port"),
+		SentinelAddrs: c.String("write-redis-sentinel-addrs"),
+		SentinelName:  c.String("write-redis-sentinel-name"),
+		Password:      c.String("write-redis-password"),
+		DB:            c.Int("write-redis-db"),
+	}
+
+	routesBE, err := backend.NewRedisBackend(readOpts, writeOpts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if c.Bool("active-healthcheck") {
+		err = routesBE.StartMonitor()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// r := router.Router{
+	// 	Backend:
+	// }
 
 	return nil
 }

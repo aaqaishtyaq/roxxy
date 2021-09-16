@@ -129,7 +129,7 @@ func (rp *NativeReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Reques
 	}
 
 	upgrade := headerGet(req.Header, "Upgrade")
-	if upgrade != "" && strings.ToLower(upgrade) == "websocker" {
+	if upgrade != "" && strings.ToLower(upgrade) == "websocket" {
 		reqData, err := rp.serveWebsocket(rw, req)
 		if err != nil {
 			reqData.logError(req.URL.Path, rp.ridString(req), err)
@@ -165,7 +165,7 @@ func (rp *NativeReverseProxy) serveWebsocket(rw http.ResponseWriter, req *http.R
 
 	hijk, ok := rw.(http.Hijacker)
 	if !ok {
-		return reqData, errors.New("Not a Hijacker")
+		return reqData, errors.New("not a Hijacker")
 	}
 
 	conn, _, err := hijk.Hijack()

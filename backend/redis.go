@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -121,7 +120,7 @@ func (b *redisBackend) Backends(host string) (string, []string, map[int]struct{}
 	pipe := b.readClient.Pipeline()
 	defer pipe.Close()
 	rangeVal := pipe.LRange(ctx, "frontend:"+host, 0, -1)
-	membersVal := pipe.SMembers(ctx, "dead:" + host)
+	membersVal := pipe.SMembers(ctx, "dead:"+host)
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return "", nil, nil, err

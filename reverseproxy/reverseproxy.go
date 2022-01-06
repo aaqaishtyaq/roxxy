@@ -2,16 +2,27 @@ package reverseproxy
 
 import (
 	"crypto/tls"
+	"errors"
 	"net"
 	"time"
 
 	"github.com/aaqaishtyaq/roxxy/log"
 )
 
+var (
+	noRouteResponseContent = []byte("no such route")
+	allBackendsDeadContent = []byte("all backends are dead")
+	okResponse             = []byte("OK")
+	websocketUpgrade       = []byte("websocket")
+
+	ErrAllBackendsDead      = errors.New(string(allBackendsDeadContent))
+	ErrNoRegisteredBackends = errors.New("no backends registered for host")
+)
+
 type Router interface {
-	HealthCheck() error
+	Healthcheck() error
 	ChooseBackend(host string) (*RequestData, error)
-	EndRequest(reqData *RequestData, isDead bool) error
+	EndRequest(reqData *RequestData, isDead bool, fn func() *log.LogEntry) error
 }
 
 type ReverseProxy interface {
@@ -41,7 +52,6 @@ func (r *RequestData) logError(path string, rid string, err error) {
 		},
 	})
 }
-
 
 type ReverseProxyConfig struct {
 	Router            Router

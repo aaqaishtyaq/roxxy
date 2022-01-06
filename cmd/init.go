@@ -2,13 +2,63 @@ package cmd
 
 import (
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"runtime"
+	"runtime/pprof"
+	"syscall"
+	"time"
 
 	"github.com/aaqaishtyaq/roxxy/backend"
 	"github.com/aaqaishtyaq/roxxy/reverseproxy"
+	"github.com/aaqaishtyaq/roxxy/router"
+	"github.com/aaqaishtyaq/roxxy/tls"
 	"github.com/google/gops/agent"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/urfave/cli/v2"
 )
+
+func handleSignals(server interface {
+	Stop()
+}) {
+	sigChan := make(chan os.Signal, 3)
+	go func() {
+		for sig := range sigChan {
+			if sig == os.Interrupt || sig == os.Kill {
+				server.Stop()
+				agent.Close()
+			}
+			if sig == syscall.SIGUSR1 {
+				pprof.Lookup("goroutine").WriteTo(os.Stdout, 2)
+			}
+			if sig == syscall.SIGUSR2 {
+				go startProfiling()
+			}
+		}
+	}()
+	signal.Notify(sigChan, os.Interrupt, os.Kill, syscall.SIGUSR1, syscall.SIGUSR2)
+}
+
+func startProfiling() {
+	cpufile, _ := os.OpenFile("./planb_cpu.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
+	memfile, _ := os.OpenFile("./planb_mem.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
+	lockfile, _ := os.OpenFile("./planb_lock.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
+	log.Println("enabling profile...")
+	runtime.GC()
+	pprof.WriteHeapProfile(memfile)
+	memfile.Close()
+	runtime.SetBlockProfileRate(1)
+	time.Sleep(30 * time.Second)
+	pprof.Lookup("block").WriteTo(lockfile, 0)
+	runtime.SetBlockProfileRate(0)
+	lockfile.Close()
+	pprof.StartCPUProfile(cpufile)
+	time.Sleep(30 * time.Second)
+	pprof.StopCPUProfile()
+	cpufile.Close()
+	log.Println("profiling done")
+}
 
 func runServer(c *cli.Context) error {
 	err := agent.Listen(agent.Options{})
@@ -20,13 +70,13 @@ func runServer(c *cli.Context) error {
 	rp = &reverseproxy.NativeReverseProxy{}
 
 	readOpts := backend.RedisOptions{
-		Network: c.String("read-redis-network"),
-		Host: c.String("read-redis-host"),
-		Port: c.Int("read-redis-port"),
+		Network:       c.String("read-redis-network"),
+		Host:          c.String("read-redis-host"),
+		Port:          c.Int("read-redis-port"),
 		SentinelAddrs: c.String("read-redis-sentinel-addrs"),
-		SentinelName: c.String("read-redis-sentinel-name"),
-		Password: c.String("read-redis-password"),
-		DB: c.Int("read-redis-db"),
+		SentinelName:  c.String("read-redis-sentinel-name"),
+		Password:      c.String("read-redis-password"),
+		DB:            c.Int("read-redis-db"),
 	}
 
 	writeOpts := backend.RedisOptions{
@@ -43,6 +93,7 @@ func runServer(c *cli.Context) error {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	if c.Bool("active-healthcheck") {
 		err = routesBE.StartMonitor()
 		if err != nil {
@@ -50,11 +101,75 @@ func runServer(c *cli.Context) error {
 		}
 	}
 
-	// r := router.Router{
-	// 	Backend:
-	// }
+	r := router.Router{
+		Backend:        routesBE,
+		LogPath:        c.String("access-log"),
+		DeadBackendTTL: c.Int("dead-backend-time"),
+		CacheEnabled:   c.Bool("backend-cache"),
+	}
 
+	err = r.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = rp.Initialize(reverseproxy.ReverseProxyConfig{
+		Router:            &r,
+		RequestIDHeader:   http.CanonicalHeaderKey(c.String("request-id-header")),
+		FlushInterval:     time.Duration(c.Int("flush-interval")) * time.Millisecond,
+		DialTimeout:       time.Duration(c.Int("dial-timeout")) * time.Second,
+		RequestTimeout:    time.Duration(c.Int("request-timeout")) * time.Second,
+		ReadTimeout:       c.Duration("client-read-timeout"),
+		ReadHeaderTimeout: c.Duration("client-read-header-timeout"),
+		WriteTimeout:      c.Duration("client-write-timeout"),
+		IdleTimeout:       c.Duration("client-idle-timeout"),
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	listener := &router.RouterListener{
+		ReverseProxy: rp,
+		Listen:       c.String("listen"),
+		TLSListen:    c.String("tls-listen"),
+		TLSPreset:    c.String("tls-preset"),
+		CertLoader:   getCertificateLoader(c, readOpts),
+	}
+
+	if addr := c.String("metrics-address"); addr != "" {
+		handler := http.NewServeMux()
+		handler.Handle("/metrics", promhttp.Handler())
+		go func() {
+			log.Fatal(http.ListenAndServe(addr, handler))
+		}()
+	}
+
+	handleSignals(listener)
+	listener.Serve()
+
+	r.Stop()
+	routesBE.StopMonitor()
 	return nil
+}
+
+func getCertificateLoader(c *cli.Context, readOpts backend.RedisOptions) tls.CertificateLoader {
+	if c.String("tls-listen") == "" {
+		return nil
+	}
+
+	from := c.String("load-certificates-from")
+	switch from {
+	case "redis":
+		client, err := readOpts.Client()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return tls.NewRedisCertificateLoader(client)
+	default:
+		return tls.NewFSCertificateLoader(from)
+	}
 }
 
 func Execute() {

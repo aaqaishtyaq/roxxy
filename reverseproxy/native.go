@@ -26,8 +26,6 @@ var (
 		Name:      "connections_current_open",
 		Help:      "The current number of open connections excluding hijacked ones.",
 	})
-
-	okResponse = []byte("ok\n")
 )
 
 type NativeReverseProxy struct {

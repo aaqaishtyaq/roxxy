@@ -49,7 +49,7 @@ func (opts RedisOptions) Client() (*redis.Client, error) {
 		if opts.Network == "unix" {
 			addr = opts.Host
 		} else {
-			addr = fmt.Sprintf("%s:%s", opts.Host, opts.Port)
+			addr = fmt.Sprintf("%s:%d", opts.Host, opts.Port)
 		}
 		return redis.NewClient(&redis.Options{
 			Network:      opts.Network,

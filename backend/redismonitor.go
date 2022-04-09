@@ -237,7 +237,7 @@ func (b *redisMonitor) check(ctx context.Context, host, backend string) bool {
 	if err != nil {
 		return false
 	}
-	url := fmt.Sprint("%s/%s", backend, strings.TrimLeft(hcData.path, "/"))
+	url := fmt.Sprintf("%s/%s", backend, strings.TrimLeft(hcData.path, "/"))
 	if !strings.HasPrefix(url, "http") {
 		url = "http://" + url
 	}

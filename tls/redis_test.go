@@ -66,7 +66,7 @@ func (s *S) TestRedisCertificateFound(c *check.C) {
 		"key":         rsaKeyPEM,
 	}).Result()
 	c.Assert(err, check.IsNil)
-	c.Assert(result, check.Equals, "OK")
+	c.Assert(result, check.Equals, true)
 	clientHello := &tls.ClientHelloInfo{
 		ServerName: "certificate.com",
 	}
@@ -80,7 +80,7 @@ func (s *S) TestRedisWildcardCertificateFound(c *check.C) {
 		"key":         rsaKeyPEM,
 	}).Result()
 	c.Assert(err, check.IsNil)
-	c.Assert(result, check.Equals, "OK")
+	c.Assert(result, check.Equals, true)
 	clientHello := &tls.ClientHelloInfo{
 		ServerName: "hello.tsuru.io",
 	}
@@ -94,7 +94,7 @@ func (s *S) TestRedisCertificateCached(c *check.C) {
 		"key":         rsaKeyPEM,
 	}).Result()
 	c.Assert(err, check.IsNil)
-	c.Assert(result, check.Equals, "OK")
+	c.Assert(result, check.Equals, true)
 	clientHello := &tls.ClientHelloInfo{
 		ServerName: "certificate-cached.com",
 	}

@@ -45,7 +45,7 @@ type LogEntry struct {
 	BackendDuration time.Duration
 	TotalDuration   time.Duration
 	BackendKey      string
-	RemoteAddress   string
+	RemoteAddr      string
 	Method          string
 	Path            string
 	Proto           string
@@ -153,13 +153,13 @@ func (l *Logger) logWriter() {
 			if backend == "" {
 				backend = "?"
 			}
-			fmt.Fprint(l.writer, "ERROR in %s -> %s - %s - %s - %s\n", el.Err.Host, backend, el.Err.Path, el.Err.Rid, el.Err.Err)
+			fmt.Fprintf(l.writer, "ERROR in %s -> %s - %s - %s - %s\n", el.Err.Host, backend, el.Err.Path, el.Err.Rid, el.Err.Err)
 			continue
 		}
 		nowFormatted := el.Now.Format(time.UnixDate)
-		ip, _, _ := net.SplitHostPort(el.RemoteAddress)
+		ip, _, _ := net.SplitHostPort(el.RemoteAddr)
 		if ip == "" {
-			ip = el.RemoteAddress
+			ip = el.RemoteAddr
 		}
 		if !strings.HasPrefix(ip, "::") {
 			ip = "::ffff:" + ip

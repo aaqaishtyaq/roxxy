@@ -182,7 +182,7 @@ func Execute() {
 		&cli.StringFlag{
 			Name:    "listen",
 			Aliases: []string{"l"},
-			Value:   "0.0.0.0:8989",
+			Value:   ":8989",
 			Usage:   "Address to listen",
 		},
 		&cli.StringFlag{

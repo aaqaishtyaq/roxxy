@@ -14,7 +14,6 @@ var (
 	noRouteResponseContent = []byte("no such route")
 	allBackendsDeadContent = []byte("all backends are dead")
 	okResponse             = []byte("OK")
-	websocketUpgrade       = []byte("websocket")
 
 	ErrAllBackendsDead      = errors.New(string(allBackendsDeadContent))
 	ErrNoRegisteredBackends = errors.New("no backends registered for host")

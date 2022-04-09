@@ -65,7 +65,7 @@ func NewFileLogger(path string) (*Logger, error) {
 	} else if path == "stdout" {
 		return NewStdoutLogger()
 	}
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0660)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o660)
 	if err != nil {
 		return nil, err
 	}

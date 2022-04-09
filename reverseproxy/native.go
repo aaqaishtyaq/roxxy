@@ -110,8 +110,10 @@ func (rp *NativeReverseProxy) Stop() {
 }
 
 func (rp *NativeReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	ctx := context.Background()
+
 	if req.Host == "__ping__" && req.URL.Path == "/" {
-		err := rp.Router.HealthCheck()
+		err := rp.Router.Healthcheck(ctx)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			rw.Write([]byte(err.Error()))
@@ -128,7 +130,7 @@ func (rp *NativeReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Reques
 
 	upgrade := headerGet(req.Header, "Upgrade")
 	if upgrade != "" && strings.ToLower(upgrade) == "websocket" {
-		reqData, err := rp.serveWebsocket(rw, req)
+		reqData, err := rp.serveWebsocket(ctx, rw, req)
 		if err != nil {
 			reqData.logError(req.URL.Path, rp.ridString(req), err)
 			http.Error(rw, "", http.StatusBadGateway)
@@ -144,8 +146,8 @@ func (rp *NativeReverseProxy) ridString(req *http.Request) string {
 	return rp.RequestIDHeader + ":" + headerGet(req.Header, rp.RequestIDHeader)
 }
 
-func (rp *NativeReverseProxy) serveWebsocket(rw http.ResponseWriter, req *http.Request) (*RequestData, error) {
-	reqData, err := rp.Router.ChooseBackend(req.Host)
+func (rp *NativeReverseProxy) serveWebsocket(ctx context.Context, rw http.ResponseWriter, req *http.Request) (*RequestData, error) {
+	reqData, err := rp.Router.ChooseBackend(ctx, req.Host)
 	if err != nil {
 		return reqData, err
 	}

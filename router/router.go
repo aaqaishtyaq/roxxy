@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -12,9 +13,7 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
-var (
-	cacheTTLExpires = 2 * time.Second
-)
+var cacheTTLExpires = 2 * time.Second
 
 type Router struct {
 	LogPath        string
@@ -38,12 +37,12 @@ func (s *backendSet) Expired() bool {
 	return time.Now().After(s.expires)
 }
 
-func (router *Router) Init() error {
+func (router *Router) Init(ctx context.Context) error {
 	var err error
 
 	if router.Backend == nil {
 		var be backend.RoutesBackend
-		be, err = backend.NewRedisBackend(backend.RedisOptions{}, backend.RedisOptions{})
+		be, err = backend.NewRedisBackend(ctx, backend.RedisOptions{}, backend.RedisOptions{})
 		if err != nil {
 			return err
 		}
@@ -76,17 +75,17 @@ func (router *Router) Init() error {
 	return nil
 }
 
-func (router *Router) ChooseBackend(host string) (*reverseproxy.RequestData, error) {
+func (router *Router) ChooseBackend(ctx context.Context, host string) (*reverseproxy.RequestData, error) {
 	reqData := &reverseproxy.RequestData{
 		StartTime: time.Now(),
 		Host:      host,
 	}
-	set, err := router.getBackends(host)
+	set, err := router.getBackends(ctx, host)
 	if err == reverseproxy.ErrNoRegisteredBackends {
 		noPortHost, _, _ := net.SplitHostPort(host)
 		if noPortHost != "" {
 			reqData.Host = noPortHost
-			set, err = router.getBackends(noPortHost)
+			set, err = router.getBackends(ctx, noPortHost)
 		}
 	}
 
@@ -134,10 +133,10 @@ func (router *Router) ChooseBackend(host string) (*reverseproxy.RequestData, err
 	return reqData, nil
 }
 
-func (router *Router) EndRequest(reqData *reverseproxy.RequestData, isDead bool, fn func() *log.LogEntry) error {
+func (router *Router) EndRequest(ctx context.Context, reqData *reverseproxy.RequestData, isDead bool, fn func() *log.LogEntry) error {
 	var markErr error
 	if isDead {
-		markErr = router.Backend.MarkDead(reqData.Host, reqData.Backend, reqData.BackendIdx, reqData.BackendLen, router.DeadBackendTTL)
+		markErr = router.Backend.MarkDead(ctx, reqData.Host, reqData.Backend, reqData.BackendIdx, reqData.BackendLen, router.DeadBackendTTL)
 	}
 	if router.logger != nil && fn != nil {
 		router.logger.MessageRaw(fn())
@@ -151,11 +150,11 @@ func (router *Router) Stop() {
 	}
 }
 
-func (router *Router) Healthcheck() error {
-	return router.Backend.Healthcheck()
+func (router *Router) Healthcheck(ctx context.Context) error {
+	return router.Backend.Healthcheck(ctx)
 }
 
-func (router *Router) getBackends(host string) (*backendSet, error) {
+func (router *Router) getBackends(ctx context.Context, host string) (*backendSet, error) {
 	if router.cache != nil {
 		if data, ok := router.cache.Get(host); ok {
 			set := data.(backendSet)
@@ -166,7 +165,7 @@ func (router *Router) getBackends(host string) (*backendSet, error) {
 	}
 	var set backendSet
 	var err error
-	set.id, set.backends, set.dead, err = router.Backend.Backends(host)
+	set.id, set.backends, set.dead, err = router.Backend.Backends(ctx, host)
 	if err != nil {
 		if err == backend.ErrNoBackends {
 			return nil, reverseproxy.ErrNoRegisteredBackends

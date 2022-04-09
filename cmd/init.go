@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -21,7 +22,8 @@ import (
 
 func handleSignals(server interface {
 	Stop()
-}) {
+},
+) {
 	sigChan := make(chan os.Signal, 3)
 	go func() {
 		for sig := range sigChan {
@@ -41,9 +43,9 @@ func handleSignals(server interface {
 }
 
 func startProfiling() {
-	cpufile, _ := os.OpenFile("./planb_cpu.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
-	memfile, _ := os.OpenFile("./planb_mem.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
-	lockfile, _ := os.OpenFile("./planb_lock.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
+	cpufile, _ := os.OpenFile("./planb_cpu.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
+	memfile, _ := os.OpenFile("./planb_mem.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
+	lockfile, _ := os.OpenFile("./planb_lock.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
 	log.Println("enabling profile...")
 	runtime.GC()
 	pprof.WriteHeapProfile(memfile)
@@ -89,13 +91,15 @@ func runServer(c *cli.Context) error {
 		DB:            c.Int("write-redis-db"),
 	}
 
-	routesBE, err := backend.NewRedisBackend(readOpts, writeOpts)
+	ctx := context.Background()
+
+	routesBE, err := backend.NewRedisBackend(ctx, readOpts, writeOpts)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if c.Bool("active-healthcheck") {
-		err = routesBE.StartMonitor()
+		err = routesBE.StartMonitor(ctx)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -108,7 +112,7 @@ func runServer(c *cli.Context) error {
 		CacheEnabled:   c.Bool("backend-cache"),
 	}
 
-	err = r.Init()
+	err = r.Init(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -39,13 +39,13 @@ func handleSignals(server interface {
 			}
 		}
 	}()
-	signal.Notify(sigChan, os.Interrupt, os.Kill, syscall.SIGUSR1, syscall.SIGUSR2)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGUSR1, syscall.SIGUSR2)
 }
 
 func startProfiling() {
-	cpufile, _ := os.OpenFile("./planb_cpu.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
-	memfile, _ := os.OpenFile("./planb_mem.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
-	lockfile, _ := os.OpenFile("./planb_lock.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
+	cpufile, _ := os.OpenFile("./roxxy_cpu.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
+	memfile, _ := os.OpenFile("./roxxy_mem.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
+	lockfile, _ := os.OpenFile("./roxxy_lock.pprof", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
 	log.Println("enabling profile...")
 	runtime.GC()
 	pprof.WriteHeapProfile(memfile)
@@ -68,8 +68,7 @@ func runServer(c *cli.Context) error {
 		log.Printf("Unable to start gops agent: %v", err)
 	}
 
-	var rp reverseproxy.ReverseProxy
-	rp = &reverseproxy.NativeReverseProxy{}
+	rp := &reverseproxy.NativeReverseProxy{}
 
 	readOpts := backend.RedisOptions{
 		Network:       c.String("read-redis-network"),

@@ -18,5 +18,3 @@
 ## Run nginx
 % docker run --rm --name nginx-serv -p 8000:80 -d nginx
 ```
-
-<!-- docker run --rm -d --net=host roxxy --listen ":80" --listen ":80" --read-redis-host 172.17.0.2 --write-redis-host 172.17.0.2 -->

@@ -30,28 +30,28 @@ var (
 	_ ReverseProxy = &NativeReverseProxy{}
 
 	openConnections = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "planb",
+		Namespace: "roxxy",
 		Subsystem: "reverseproxy",
 		Name:      "connections_current_open",
 		Help:      "The current number of open connections excluding hijacked ones.",
 	})
 
 	requestDurations = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Namespace: "planb",
+		Namespace: "roxxy",
 		Subsystem: "reverseproxy",
 		Name:      "http_request_duration_seconds",
 		Help:      "The total HTTP request latencies in seconds.",
 	})
 
 	backendDurations = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Namespace: "planb",
+		Namespace: "roxxy",
 		Subsystem: "reverseproxy",
 		Name:      "backend_request_duration_seconds",
 		Help:      "The backends HTTP request latencies in seconds.",
 	})
 
 	backendResponse = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "planb",
+		Namespace: "roxxy",
 		Subsystem: "reverseproxy",
 		Name:      "backends_responses_total",
 		Help:      "The total backends responses by status code.",
@@ -185,7 +185,7 @@ func (rp *NativeReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Reques
 		}
 		return
 	}
-	req.Header["Planb-X-Forwarded-For"] = req.Header["X-Forwarded-For"]
+	req.Header["Roxxy-X-Forwarded-For"] = req.Header["X-Forwarded-For"]
 	rp.rp.ServeHTTP(rw, req)
 }
 
@@ -303,8 +303,8 @@ func (rp *NativeReverseProxy) doResponse(req *http.Request, reqData *RequestData
 func (rp *NativeReverseProxy) roundTripWithData(req *http.Request, reqData *RequestData, err error) (rsp *http.Response) {
 	isDebug := fastHeaderGet(req.Header, "X-Debug-Router") != ""
 	fastHeaderDel(req.Header, "X-Debug-Router")
-	originalForwardedFor := fastHeaderGet(req.Header, "Planb-X-Forwarded-For")
-	fastHeaderDel(req.Header, "Planb-X-Forwarded-For")
+	originalForwardedFor := fastHeaderGet(req.Header, "Roxxy-X-Forwarded-For")
+	fastHeaderDel(req.Header, "Roxxy-X-Forwarded-For")
 	if err != nil || req.URL.Scheme == "" || req.URL.Host == "" {
 		switch err {
 		case ErrAllBackendsDead:

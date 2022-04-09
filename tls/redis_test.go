@@ -75,14 +75,14 @@ func (s *S) TestRedisCertificateFound(c *check.C) {
 }
 
 func (s *S) TestRedisWildcardCertificateFound(c *check.C) {
-	result, err := s.redisClient.HMSet(ctx, "tls:*.tsuru.io", map[string]interface{}{
+	result, err := s.redisClient.HMSet(ctx, "tls:*.dvito.sh", map[string]interface{}{
 		"certificate": rsaCertPEM,
 		"key":         rsaKeyPEM,
 	}).Result()
 	c.Assert(err, check.IsNil)
 	c.Assert(result, check.Equals, true)
 	clientHello := &tls.ClientHelloInfo{
-		ServerName: "hello.tsuru.io",
+		ServerName: "hello.dvito.sh",
 	}
 	_, err = s.be.GetCertificate(clientHello)
 	c.Assert(err, check.IsNil)

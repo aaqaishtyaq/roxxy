@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - trunk
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go: ["1.17"]
+        os: [ubuntu-latest,]
+    name: Go ${{ matrix.go }} in ${{ matrix.os }}
+    steps:
+    # Codecov requires depth >1 to be able to figure out commit SHA
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+    - name: Environment
+      run: |
+        go version
+        go env
+    - name: Start Redis
+      uses: supercharge/redis-github-action@1.4.0
+    - name: Test
+      env:
+        GOFLAGS: -mod=mod
+      run: go test -short -race -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic ./...
+    - name: Upload coverage to Codecov
+      run: bash <(curl -s https://codecov.io/bash)

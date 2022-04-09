@@ -54,19 +54,19 @@ func (s *FSSuite) SetUpTest(c *check.C) {
 	c.Assert(err, check.IsNil)
 
 	tmpfn := filepath.Join(s.path, "*.dvito.sh.key")
-	err = ioutil.WriteFile(tmpfn, []byte(fileKeyPEM), 0666)
+	err = ioutil.WriteFile(tmpfn, []byte(fileKeyPEM), 0o666)
 	c.Assert(err, check.IsNil)
 
 	tmpfn = filepath.Join(s.path, "*.dvito.sh.crt")
-	err = ioutil.WriteFile(tmpfn, []byte(fileCertPEM), 0666)
+	err = ioutil.WriteFile(tmpfn, []byte(fileCertPEM), 0o666)
 	c.Assert(err, check.IsNil)
 
 	tmpfn = filepath.Join(s.path, "aaqa.dev.key")
-	err = ioutil.WriteFile(tmpfn, []byte(fileKeyPEM), 0666)
+	err = ioutil.WriteFile(tmpfn, []byte(fileKeyPEM), 0o666)
 	c.Assert(err, check.IsNil)
 
 	tmpfn = filepath.Join(s.path, "aaqa.dev.crt")
-	err = ioutil.WriteFile(tmpfn, []byte(fileCertPEM), 0666)
+	err = ioutil.WriteFile(tmpfn, []byte(fileCertPEM), 0o666)
 	c.Assert(err, check.IsNil)
 
 	s.be = NewFSCertificateLoader(s.path)

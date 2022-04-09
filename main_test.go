@@ -102,7 +102,7 @@ func (s *S) TestServeHTTPStressAllLeakDetector(c *check.C) {
 	files := make([]*os.File, nProffs)
 	if checkLeaksEnabled {
 		for i := range files {
-			files[i], _ = os.OpenFile(fmt.Sprintf("./roxxy_stress_%d_mem.pprof", i), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
+			files[i], _ = os.OpenFile(fmt.Sprintf("./roxxy_stress_%d_mem.pprof", i), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o660)
 		}
 	}
 	opts := backend.RedisOptions{

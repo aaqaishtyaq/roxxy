@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -89,7 +90,7 @@ func (opts RedisOptions) Client() (*redis.Client, error) {
 	}), nil
 }
 
-func NewRedisBackend(readOpts, writeOpts RedisOptions) (RoutesBackend, error) {
+func NewRedisBackend(ctx context.Context, readOpts, writeOpts RedisOptions) (RoutesBackend, error) {
 	rClient, err := readOpts.Client()
 	if err != nil {
 		return nil, err
@@ -112,11 +113,11 @@ func NewRedisBackend(readOpts, writeOpts RedisOptions) (RoutesBackend, error) {
 	}, nil
 }
 
-func (b *redisBackend) Healthcheck() error {
+func (b *redisBackend) Healthcheck(ctx context.Context) error {
 	return b.readClient.Ping(ctx).Err()
 }
 
-func (b *redisBackend) Backends(host string) (string, []string, map[int]struct{}, error) {
+func (b *redisBackend) Backends(ctx context.Context, host string) (string, []string, map[int]struct{}, error) {
 	pipe := b.readClient.Pipeline()
 	defer pipe.Close()
 	rangeVal := pipe.LRange(ctx, "frontend:"+host, 0, -1)
@@ -137,7 +138,7 @@ func (b *redisBackend) Backends(host string) (string, []string, map[int]struct{}
 	return host, backends[1:], deadMap, nil
 }
 
-func (b *redisBackend) MarkDead(host string, backend string, backendIdx int, backendLen int, deadTTL int) error {
+func (b *redisBackend) MarkDead(ctx context.Context, host string, backend string, backendIdx int, backendLen int, deadTTL int) error {
 	pipe := b.writeClient.Pipeline()
 	defer pipe.Close()
 	deadKey := "dead:" + host
@@ -151,9 +152,9 @@ func (b *redisBackend) MarkDead(host string, backend string, backendIdx int, bac
 	return b.writeClient.Publish(ctx, "dead", deadMsg).Err()
 }
 
-func (b *redisBackend) StartMonitor() error {
+func (b *redisBackend) StartMonitor(ctx context.Context) error {
 	var err error
-	b.monitor, err = newRedisMonitor(b.writeClient)
+	b.monitor, err = newRedisMonitor(ctx, b.writeClient)
 	return err
 }
 

@@ -1,6 +1,7 @@
 package reverseproxy
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"net"
@@ -20,9 +21,9 @@ var (
 )
 
 type Router interface {
-	Healthcheck() error
-	ChooseBackend(host string) (*RequestData, error)
-	EndRequest(reqData *RequestData, isDead bool, fn func() *log.LogEntry) error
+	Healthcheck(ctx context.Context) error
+	ChooseBackend(ctx context.Context, host string) (*RequestData, error)
+	EndRequest(ctx context.Context, reqData *RequestData, isDead bool, fn func() *log.LogEntry) error
 }
 
 type ReverseProxy interface {

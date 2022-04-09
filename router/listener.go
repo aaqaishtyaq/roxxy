@@ -73,7 +73,7 @@ func (r *RouterListener) tcpListener() net.Listener {
 // Presets trying to match recommendations at
 // https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility
 var tlsPresets = map[string]*stdtls.Config{
-	TLS_PRESET_MODERN: &stdtls.Config{
+	TLS_PRESET_MODERN: {
 		CurvePreferences: []stdtls.CurveID{
 			stdtls.CurveP256,
 			stdtls.CurveP384,
@@ -91,7 +91,7 @@ var tlsPresets = map[string]*stdtls.Config{
 			stdtls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
 		},
 	},
-	TLS_PRESET_INTERMEDIATE: &stdtls.Config{
+	TLS_PRESET_INTERMEDIATE: {
 		CurvePreferences: []stdtls.CurveID{
 			stdtls.CurveP256,
 			stdtls.CurveP384,
@@ -118,7 +118,7 @@ var tlsPresets = map[string]*stdtls.Config{
 			stdtls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
 		},
 	},
-	TLS_PRESET_OLD: &stdtls.Config{
+	TLS_PRESET_OLD: {
 		CurvePreferences: []stdtls.CurveID{
 			stdtls.CurveP256,
 			stdtls.CurveP384,

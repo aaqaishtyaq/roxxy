@@ -24,7 +24,6 @@ func NewFSCertificateLoader(path string) *FSCertificateLoader {
 		keyPath := filepath.Base(match)
 		cname := keyPath[0 : len(keyPath)-4]
 		cert, err := loadPrivateKeyPair(path, cname)
-
 		if err != nil {
 			log.Fatal(err)
 		}

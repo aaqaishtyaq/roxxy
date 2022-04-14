@@ -3,7 +3,7 @@ module github.com/aaqaishtyaq/roxxy
 go 1.17
 
 require (
-	github.com/go-redis/redis/v8 v8.11.3
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/gops v0.3.19
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/golang-lru v0.5.4

@@ -16,7 +16,7 @@ jobs:
     name: Go ${{ matrix.go }} in ${{ matrix.os }}
     steps:
     # Codecov requires depth >1 to be able to figure out commit SHA
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 2
     - uses: actions/setup-go@v3

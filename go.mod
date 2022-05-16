@@ -7,7 +7,7 @@ require (
 	github.com/google/gops v0.3.19
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c

@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/go-redis/redis/v8 v8.11.3
-	github.com/google/gops v0.3.19
+	github.com/google/gops v0.3.25
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/prometheus/client_golang v1.12.1
@@ -27,6 +27,6 @@ require (
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 )

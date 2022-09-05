@@ -1,0 +1,67 @@
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+builds:
+  - id: "roxxy"
+    binary: "roxxy"
+    goos:
+      - darwin
+      # - linux
+    goarch:
+      - amd64
+      # - arm64
+    ldflags:
+      - -s -w -X "github.com/aaqaishtyaq/roxxy/cmd.Version={{ .Tag }}"
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+dockers:
+- image_templates:
+  - 'ghcr.io/aaqaishtyaq/roxxy:{{ .Tag }}-amd64'
+  dockerfile: Dockerfile.release
+  use: buildx
+  build_flag_templates:
+  - "--pull"
+  - "--label=org.opencontainers.image.created={{.Date}}"
+  - "--label=org.opencontainers.image.name={{.ProjectName}}"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  - "--label=org.opencontainers.image.source={{.GitURL}}"
+  - "--platform=linux/amd64"
+- image_templates:
+  - 'ghcr.io/aaqaishtyaq/roxxy:{{ .Tag }}-arm64'
+  dockerfile: Dockerfile.release
+  use: buildx
+  build_flag_templates:
+  - "--pull"
+  - "--label=org.opencontainers.image.created={{.Date}}"
+  - "--label=org.opencontainers.image.name={{.ProjectName}}"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  - "--label=org.opencontainers.image.source={{.GitURL}}"
+  - "--platform=linux/arm64"
+  goarch: arm64
+
+docker_manifests:
+- name_template: 'ghcr.io/aaqaishtyaq/roxxy:{{ .Tag }}'
+  image_templates:
+  - 'ghcr.io/aaqaishtyaq/roxxy:{{ .Tag }}-amd64'
+  - 'ghcr.io/aaqaishtyaq/roxxy:{{ .Tag }}-arm64'
+- name_template: 'ghcr.io/aaqaishtyaq/roxxy:latest'
+  image_templates:
+  - 'ghcr.io/aaqaishtyaq/roxxy:{{ .Tag }}-amd64'
+  - 'ghcr.io/aaqaishtyaq/roxxy:{{ .Tag }}-arm64'

@@ -7,10 +7,10 @@ builds:
     binary: "roxxy"
     goos:
       - darwin
-      # - linux
+      - linux
     goarch:
       - amd64
-      # - arm64
+      - arm64
     ldflags:
       - -s -w -X "github.com/aaqaishtyaq/roxxy/cmd.Version={{ .Tag }}"
 archives:
@@ -32,7 +32,7 @@ changelog:
 dockers:
 - image_templates:
   - 'ghcr.io/aaqaishtyaq/roxxy:{{ .Tag }}-amd64'
-  dockerfile: Dockerfile.release
+  dockerfile: Dockerfile
   use: buildx
   build_flag_templates:
   - "--pull"
@@ -44,7 +44,7 @@ dockers:
   - "--platform=linux/amd64"
 - image_templates:
   - 'ghcr.io/aaqaishtyaq/roxxy:{{ .Tag }}-arm64'
-  dockerfile: Dockerfile.release
+  dockerfile: Dockerfile
   use: buildx
   build_flag_templates:
   - "--pull"

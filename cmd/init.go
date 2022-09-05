@@ -20,6 +20,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var Version = "dev"
+
 func handleSignals(server interface {
 	Stop()
 },
@@ -301,7 +303,7 @@ func Execute() {
 	}
 	app.Name = "roxxy"
 	app.Usage = "http and websockets reverse proxy"
-	app.Version = "0.0.1"
+	app.Version = Version
 	app.Action = runServer
 
 	err := app.Run(os.Args)

@@ -83,7 +83,7 @@ func (s *S) TestServeHTTPStressAllLeakDetector(c *check.C) {
 	frontends := make([]string, nFrontends)
 	ctx := context.Background()
 	for i := range frontends {
-		frontend := fmt.Sprintf("stressfront%0d.com", i)
+		frontend := fmt.Sprintf("roxxyfront%0d.com", i)
 		frontends[i] = frontend
 		err := s.redis.RPush(ctx, "frontend:"+frontend, frontend).Err()
 		c.Assert(err, check.IsNil)

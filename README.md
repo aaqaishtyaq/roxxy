@@ -2,7 +2,7 @@
 
 Roxxy is a distributed HTTP/websockets reverse proxy backed by Redis inspired by [planb](https://github.com/tsuru/planb) and [hipache](https://travis-ci.org/tsuru/planb)
 
-## Features (TODO)
+## Features
 
 - [x] Load-Balancing
 
